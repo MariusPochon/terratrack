@@ -2,16 +2,19 @@
 require_once __DIR__ . '/../wrk/ObservationWorker.php';
 require_once __DIR__ . '/../wrk/CoordinateWorker.php';
 require_once __DIR__ . '/../wrk/ImageWorker.php';
+require_once __DIR__ . '/../wrk/CategoryWorker.php';
 class ObservationController {
 private CoordinateWorker $coordinatesWorker;
 private ImageWorker $imageWorker;
 private ObservationWorker $observationWorker;
+private CategoryWorker $categoryWorker;
 
 public function __construct()
 {
     $this->coordinatesWorker = new CoordinateWorker();
     $this->imageWorker = new ImageWorker();
     $this->observationWorker = new ObservationWorker();
+    $this->categoryWorker = new CategoryWorker();
 }
     public function create(): void {
 
@@ -92,11 +95,13 @@ public function __construct()
             $observations = $this->observationWorker->findAll();
 
             $result = [];
-            foreach ($observations as $obs) {
-                $coords = $this->coordinatesWorker->findByObservationId($obs->getPkObservation());
-                $images = $this->imageWorker->findByObservationId($obs->getPkObservation());
+            foreach ($observations as $observation) {
+                $coords = $this->coordinatesWorker->findByObservationId($observation->getPkObservation());
+                $images = $this->imageWorker->findByObservationId($observation->getPkObservation());
 
-                $data = $obs->toArray();
+                $data = $observation->toArray();
+                $category = $this->categoryWorker->findById($observation->getFkCategory()); //récupèrer la catégorie de l'observation
+                $data['category'] = $category ? $category->toArray() : null;
                 $data['coordinates'] = array_map(fn($c) => $c->toArray(), $coords);
                 $data['images']      = array_map(fn($i) => $i->toArray(), $images);
 

@@ -17,12 +17,25 @@ class UserController {
         this.observationLayers = [];
     }
 
+    async init() {
+        this.initMap('map');
+
+        document.getElementById('center-btn')
+            .addEventListener('click', () => this.centerMap());
+
+        document.getElementById('search-input')
+            .addEventListener('input', (e) => this.searchObservation(e.target.value));
+
+        await this.loadCategories();
+        await this.loadObservations();
+    }
+
     /**
      * Initializes the Leaflet map.
      * @param {string} containerId DOM id of the map container.
      */
     initMap(containerId) {
-        this.map = L.map(containerId).setView([46.8, 8.2], 8); // default: Switzerland
+        this.map = L.map(containerId).setView([46.8, 8.2], 8); // defaut: Suisse
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap'
@@ -34,17 +47,23 @@ class UserController {
      */
     centerMap() {
         if (!navigator.geolocation) {
-            this.showError("Géolocalisation non supportée par ce navigateur.");
+            this.showError("Géolocalisation non supportée.");
             return;
         }
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const { latitude, longitude } = position.coords;
-                this.map.setView([latitude, longitude], 14);
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                this.map.setView([lat, lng], 8);
+                L.marker([lat, lng])
+                    .addTo(this.map)
+                    .bindPopup("Vous êtes ici !")
+                    .openPopup();
             },
             () => {
-                this.showError("Impossible d'obtenir la position.");
-            }
+                this.showError("Géolocalisation refusée.");
+            },
+            { timeout: 5000}
         );
     }
 
@@ -115,6 +134,7 @@ class UserController {
                 <small>${this.escapeHtml(catName)}</small>
                 ${desc}
                 ${images}
+                <a> ecrit a la main</a>
             </div>
         `;
     }
@@ -157,6 +177,10 @@ class UserController {
     }
 
     async searchObservation(keyword) {
+        if (!keyword || keyword.trim().length < 3) {
+            await this.loadObservations(); // recharge tout si moins de 3 chars
+            return;
+        }
         try {
             if (!keyword || !keyword.trim()) {
                 await this.loadObservations();

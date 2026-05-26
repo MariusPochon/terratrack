@@ -2,11 +2,13 @@
 
 session_start();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+//header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost:8080');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Preflight OPTIONS (CORS)
+//preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -38,22 +40,22 @@ switch ($action) {
         (new AuthController())->logout();
         break;
 
-    case 'check':
+    case 'checkAuth':
         require_once __DIR__ . '/ctrl/AuthController.php';
         (new AuthController())->check();
         break;
 
-    case 'search':
+    case 'searchObservations':
         require_once __DIR__ . '/ctrl/ObservationController.php';
         (new ObservationController())->search();
         break;
 
-    case 'delete':
+    case 'deleteObservation':
         require_once __DIR__ . '/ctrl/ObservationController.php';
         (new ObservationController())->delete();
         break;
 
-    case 'update':
+    case 'updateObservation':
         require_once __DIR__ . '/ctrl/ObservationController.php';
         (new ObservationController())->update();
         break;

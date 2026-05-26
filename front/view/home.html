@@ -40,15 +40,7 @@
 <script src="../ctrl/UserController.js"></script>
 <script>
     const controller = new UserController();
-    controller.initMap('map');
-
-    document.getElementById('center-btn').addEventListener('click', () => controller.centerMap());
-    document.getElementById('search-input').addEventListener('input', (e) => {
-        controller.searchObservation(e.target.value);
-    });
-
-    controller.loadCategories();
-    controller.loadObservations();
+    controller.init();
 </script>
 
 </body>

@@ -6,6 +6,7 @@ class LoginController {
 
     init() {
         const form = document.getElementById('login-form');
+        console.log('form trouvé:', form);
         if (!form) return;
 
         form.addEventListener('submit', (e) => {
@@ -17,6 +18,7 @@ class LoginController {
     }
 
     async login(username, password) {
+        console.log('login() appelé avec:', username, password);
         if (!username || !password) {
             this.showError("Nom d'utilisateur et mot de passe requis.");
             return;
@@ -24,13 +26,17 @@ class LoginController {
 
         try {
             const result = await this.authWorker.postLogin(username, password);
+            console.log('Réponse du backend:', result);
 
             if (result && result.success === true) {
+                console.log('Succès → redirect');
                 window.location.href = 'admin.html';
             } else {
+                console.log('Échec:', result);
                 this.showError(result.error ?? "Identifiants incorrects.");
             }
         } catch (err) {
+            console.log('Erreur catch:', err.message);
             this.showError("Identifiants incorrects.");
         }
     }
