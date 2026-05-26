@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>TerraTrack – Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>TerraTrack – Admin</h1>
+    <nav>
+        <a href="home.html">Carte publique</a>
+    </nav>
+    <button id="logout-btn" style="margin-left:auto;">Déconnexion</button>
+</header>
+
+<main>
+    <div id="map"></div>
+
+    <aside>
+        <div id="error" class="error-box"></div>
+
+        <div class="toolbar">
+            <button id="center-btn">Ma position</button>
+            <button id="draw-point-btn">+ Point</button>
+            <button id="draw-zone-btn">+ Zone</button>
+            <button id="finish-zone-btn" style="display:none;">Terminer la zone</button>
+            <button id="cancel-draw-btn" style="display:none;">Annuler</button>
+        </div>
+        <div id="draw-status" style="font-size:0.8rem;color:#555;"></div>
+
+        <input type="text" id="search-input" placeholder="Rechercher...">
+
+        <form id="observation-form" enctype="multipart/form-data">
+            <h3 id="form-title">Nouvelle observation</h3>
+            <input type="hidden" id="form-type" value="point">
+
+            <label for="title-input">Titre</label>
+            <input type="text" id="title-input" required>
+
+            <label for="description-input">Description</label>
+            <textarea id="description-input"></textarea>
+
+            <label for="category-select">Catégorie</label>
+            <select id="category-select" required></select>
+
+            <label for="images-input">Images</label>
+            <input type="file" id="images-input" multiple accept="image/*">
+
+            <div style="display:flex; gap:0.4rem;">
+                <button type="submit">Enregistrer</button>
+                <button type="button" id="cancel-edit-btn">Annuler</button>
+            </div>
+        </form>
+
+        <h3>Observations</h3>
+        <div id="observation-list"></div>
+
+        <h3>Légende</h3>
+        <div id="legend"></div>
+    </aside>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../wrk/ObservationWorker.js"></script>
+<script src="../wrk/CategoryWorker.js"></script>
+<script src="../wrk/AuthWorker.js"></script>
+<script src="../ctrl/UserController.js"></script>
+<script src="../ctrl/AdminController.js"></script>
+<script>
+    const controller = new AdminController();
+    controller.init();
+</script>
+
+</body>
+</html>

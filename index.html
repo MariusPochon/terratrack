@@ -1,66 +1,44 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width" name="viewport"/>
+    <meta charset="UTF-8">
     <title>TerraTrack</title>
-    <link href="style.css" rel="stylesheet">
-    <link crossorigin="" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          rel="stylesheet"/>
-    <script crossorigin=""
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, sans-serif;
+            background: #1a2a3a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 { font-size: 2.5rem; margin-bottom: 0.4rem; }
+        p  { color: #aac; margin-bottom: 2rem; }
+        .links { display: flex; gap: 1rem; }
+        a.btn {
+            display: inline-block;
+            padding: 0.7rem 1.6rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: opacity .15s;
+        }
+        a.btn:hover { opacity: .85; }
+        .btn-primary { background: #3498db; color: #fff; }
+        .btn-secondary { background: #fff; color: #2c3e50; }
+    </style>
 </head>
 <body>
-
-<div id="map"></div>
-<div id="button">
-    <button onclick="geolocalisation()">Geolocalisation</button>
-</div>
-
-<!-- Modal formulaire : s'ouvre automatiquement quand on pose un marqueur ou polygone -->
-<div id="modal-overlay">
-    <div id="modal">
-        <h2 id="modal-titre">Nouveau relevé</h2>
-
-        <form id="form-releve">
-            <!-- Champs cachés remplis automatiquement par map.js -->
-            <input type="hidden" name="type">
-            <input type="hidden" name="latitude">
-            <input type="hidden" name="longitude">
-            <input type="hidden" name="points_json">
-            <input type="hidden" name="date_enregistrement">
-            <input type="hidden" name="heure_enregistrement">
-
-            <label for="nom">Titre</label>
-            <input type="text" id="nom" name="nom" required placeholder="Ex: Nid d'hirondelle">
-
-            <label for="description">Description</label>
-            <textarea id="description" name="description" placeholder="Décris ce que tu observes..."></textarea>
-
-            <label for="fk_categorie">Catégorie</label>
-            <select id="fk_categorie" name="fk_categorie" required>
-                <option value="">-- choisir --</option>
-                <!-- rempli dynamiquement par map.js -->
-            </select>
-
-            <label for="images">Images (optionnel)</label>
-            <input type="file" id="images" name="images[]" accept="image/*" multiple>
-
-            <div id="modal-status"></div>
-
-            <div id="modal-boutons">
-                <button type="button" id="btn-annuler">Annuler</button>
-                <button type="submit">Enregistrer</button>
-            </div>
-        </form>
+    <h1>TerraTrack</h1>
+    <p>Application de relevés géolocalisés</p>
+    <div class="links">
+        <a class="btn btn-primary" href="front/view/home.html">Carte publique</a>
+        <a class="btn btn-secondary" href="front/view/login.html">Administration</a>
     </div>
-</div>
-
-<script src="map.js"></script>
-
 </body>
 </html>

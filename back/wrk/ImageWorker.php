@@ -19,7 +19,6 @@ class ImageWorker {
         return new Image(
             (int) $row['fk_observation'],
             $row['file_path'],
-            $row['uploaded_at'],
             (int) $row['pk_image']
         );
     }
@@ -31,7 +30,7 @@ class ImageWorker {
     /** @return Image[] */
     public function findByObservationId(int $fkObservation): array {
         $stmt = $this->pdo->prepare(
-            'SELECT * FROM t_image WHERE fk_observation = :fk_observation ORDER BY uploaded_at ASC'
+            'SELECT * FROM t_image WHERE fk_observation = :fk_observation'
         );
         $stmt->execute([':fk_observation' => $fkObservation]);
 

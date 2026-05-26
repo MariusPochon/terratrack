@@ -22,7 +22,6 @@ class ObservationWorker {
             (int) $row['fk_category'],
             $row['description'],
             $row['created_at'],
-            $row['updated_at'],
             (int) $row['pk_observation']
         );
     }
@@ -95,8 +94,7 @@ class ObservationWorker {
              SET title        = :title,
                  description  = :description,
                  type         = :type,
-                 fk_category  = :fk_category,
-                 updated_at   = NOW()
+                 fk_category  = :fk_category
              WHERE pk_observation = :pk_observation'
         );
         $stmt->execute([

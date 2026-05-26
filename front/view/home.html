@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>TerraTrack</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>TerraTrack</h1>
+    <nav>
+        <a href="home.html">Carte</a>
+        <a href="login.html">Connexion</a>
+    </nav>
+</header>
+
+<main>
+    <div id="map"></div>
+
+    <aside>
+        <div id="error" class="error-box"></div>
+
+        <div class="toolbar">
+            <button id="center-btn">Ma position</button>
+        </div>
+
+        <input type="text" id="search-input" placeholder="Rechercher...">
+
+        <div id="legend"></div>
+    </aside>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../wrk/ObservationWorker.js"></script>
+<script src="../wrk/CategoryWorker.js"></script>
+<script src="../ctrl/UserController.js"></script>
+<script>
+    const controller = new UserController();
+    controller.initMap('map');
+
+    document.getElementById('center-btn').addEventListener('click', () => controller.centerMap());
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        controller.searchObservation(e.target.value);
+    });
+
+    controller.loadCategories();
+    controller.loadObservations();
+</script>
+
+</body>
+</html>

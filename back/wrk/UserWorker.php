@@ -14,7 +14,6 @@ class UserWorker {
     // -------------------------------------------------------------------------
     // Hydration
     // -------------------------------------------------------------------------
-
     private function hydrate(array $row): User {
         return new User(
             $row['username'],

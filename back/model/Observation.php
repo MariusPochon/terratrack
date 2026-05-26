@@ -8,7 +8,6 @@ class Observation {
     private string $type;
     private int $fkCategory;
     private ?string $createdAt;
-    private ?string $updatedAt;
 
     public function __construct(
         string $title,
@@ -16,7 +15,6 @@ class Observation {
         int $fkCategory,
         ?string $description = null,
         ?string $createdAt = null,
-        ?string $updatedAt = null,
         ?int $pkObservation = null
     ) {
         $this->title         = $title;
@@ -24,7 +22,6 @@ class Observation {
         $this->fkCategory   = $fkCategory;
         $this->description   = $description;
         $this->createdAt     = $createdAt;
-        $this->updatedAt     = $updatedAt;
         $this->pkObservation = $pkObservation;
     }
 
@@ -46,9 +43,6 @@ class Observation {
     public function getCreatedAt(): ?string { return $this->createdAt; }
     public function setCreatedAt(?string $createdAt): void { $this->createdAt = $createdAt; }
 
-    public function getUpdatedAt(): ?string { return $this->updatedAt; }
-    public function setUpdatedAt(?string $updatedAt): void { $this->updatedAt = $updatedAt; }
-
     public function toArray(): array {
         return [
             'pk_observation' => $this->pkObservation,
@@ -57,7 +51,6 @@ class Observation {
             'type'           => $this->type,
             'fk_category'   => $this->fkCategory,
             'created_at'     => $this->createdAt,
-            'updated_at'     => $this->updatedAt,
         ];
     }
 }
