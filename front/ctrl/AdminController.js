@@ -32,35 +32,19 @@ class AdminController extends UserController {
 
         this.initMap('map');
         this.setupDraw();
-        this.bindEvents();
+        this.bindUserEvents();
+        this.bindAdminEvents();
 
         await this.loadCategories();
         await this.loadObservations();
+
         this.populateCategorySelect();
         this.listObservations();
     }
 
     // -------------------------------------------------------------------------
-    // Leaflet.draw  (same approach as test-09-statement_db_to_html)
+    // Leaflet.draw
     // -------------------------------------------------------------------------
-
-    /**
-     * Colored SVG pin — same technique as test-09.
-     * Grey by default (before the user picks a category in the modal).
-     */
-    createMarkerIcon(color) {
-        return L.divIcon({
-            className: '',
-            html: `<div style="color:${color}">
-                       <svg viewBox="0 0 24 24" width="32" height="32">
-                           <path fill="currentColor"
-                               d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z"/>
-                       </svg>
-                   </div>`,
-            iconSize:   [32, 32],
-            iconAnchor: [16, 32]
-        });
-    }
 
     setupDraw() {
         // Two separate FeatureGroups: drawn (current session) and saved (from DB)
@@ -71,7 +55,7 @@ class AdminController extends UserController {
 
         const drawControl = new L.Control.Draw({
             draw: {
-                marker:       { icon: this.createMarkerIcon('#95a5a6') },
+                marker:       true,
                 polygon:      true,
                 circle:       false,
                 rectangle:    false,
@@ -170,15 +154,9 @@ class AdminController extends UserController {
     // Events
     // -------------------------------------------------------------------------
 
-    bindEvents() {
+    bindAdminEvents() {
         document.getElementById('logout-btn')
             .addEventListener('click', () => this.logout());
-
-        document.getElementById('center-btn')
-            .addEventListener('click', () => this.centerMap());
-
-        document.getElementById('search-input')
-            .addEventListener('input', (e) => this.searchObservation(e.target.value));
 
         // Cancel button — also triggers when clicking outside the modal box
         document.getElementById('btn-annuler')
@@ -197,8 +175,6 @@ class AdminController extends UserController {
                 const cat = this.categoriesById[e.target.value];
                 if (!cat || !this.currentLayer) return;
                 if (this.currentLayer.setIcon) {
-                    this.currentLayer.setIcon(this.createMarkerIcon(cat.color));
-                } else {
                     this.currentLayer.setStyle({ color: cat.color, fillColor: cat.color });
                 }
             });
@@ -226,65 +202,19 @@ class AdminController extends UserController {
     }
 
     // -------------------------------------------------------------------------
-    // Styled popup  (same approach as test-09 popupHTML)
-    // -------------------------------------------------------------------------
-
-    buildPopup(obs) {
-        const color   = this.getCategoryColor(obs);
-        const catName = obs.category ? obs.category.name : (this.categoriesById[obs.fk_category]?.name || '');
-        const desc    = obs.description
-            ? `<p style="margin:8px 0 0;font-size:13px;color:#444;line-height:1.4;">${this.escapeHtml(obs.description)}</p>`
-            : '';
-        const date    = obs.created_at
-            ? `<div style="margin-top:8px;font-size:11px;color:#999;">${obs.created_at}</div>`
-            : '';
-        const images  = (Array.isArray(obs.images) && obs.images.length)
-            ? obs.images.map(img =>
-                `<img src="../back/${this.escapeHtml(img.file_path)}"
-                      style="width:100%;margin-top:8px;border-radius:6px;display:block;">`
-              ).join('')
-            : '';
-
-        return `
-            <div style="font-family:sans-serif;max-width:230px;">
-                <div style="background:${color};color:#fff;padding:3px 8px;border-radius:12px;
-                            font-size:11px;font-weight:bold;display:inline-block;margin-bottom:6px;">
-                    ${this.escapeHtml(catName)}
-                </div>
-                <div style="font-size:15px;font-weight:bold;color:#222;">${this.escapeHtml(obs.title)}</div>
-                ${desc}${date}${images}
-            </div>`;
-    }
-
-    // -------------------------------------------------------------------------
     // Override displayObservations to use savedItems FeatureGroup
     // -------------------------------------------------------------------------
 
     displayObservations(observations) {
-        if (!this.savedItems) return; //si savedItems est pas initialisé
+        if (!this.savedItems) {
+            this.showError("Erreur interne : la carte n'est pas encore prête.");
+            return;
+        }
         this.savedItems.clearLayers();
 
         observations.forEach(obs => {
-            const color  = this.getCategoryColor(obs);
-            const coords = (obs.coordinates || [])
-                .slice()
-                .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-
-            if (!coords.length) return;
-
-            let layer = null;
-
-            if (obs.type === 'zone' && coords.length >= 3) {
-                const latlngs = coords.map(c => [parseFloat(c.latitude), parseFloat(c.longitude)]);
-                layer = L.polygon(latlngs, { color, fillColor: color, fillOpacity: 0.3 });
-            } else {
-                const c = coords[0];
-                layer = L.circleMarker(
-                    [parseFloat(c.latitude), parseFloat(c.longitude)],
-                    { color, fillColor: color, fillOpacity: 0.8, radius: 8 }
-                );
-            }
-
+            const layer = this.buildLayer(obs); // ← même méthode que le parent
+            if (!layer) return;
             layer.bindPopup(this.buildPopup(obs), { maxWidth: 260 });
             this.savedItems.addLayer(layer);
         });

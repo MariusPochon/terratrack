@@ -141,7 +141,7 @@ public function __construct()
 
         public function delete(): void {
 
-            //$this->requireAuth();
+            $this->requireAuth();
 
             $id = $_POST['id'] ?? null;
             if (!$id) {
@@ -156,7 +156,7 @@ public function __construct()
         }
 
         public function update(): void {
-            //$this->requireAuth();
+            $this->requireAuth();
             $id = $_POST['id'] ?? null;
             $title = $_POST['title'] ?? null;
             $description = $_POST['description'] ?? null;

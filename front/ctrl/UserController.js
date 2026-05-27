@@ -19,15 +19,18 @@ class UserController {
 
     async init() {
         this.initMap('map');
+        this.bindUserEvents();
 
+        await this.loadCategories();
+        await this.loadObservations();
+    }
+
+    bindUserEvents() {
         document.getElementById('center-btn')
             .addEventListener('click', () => this.centerMap());
 
         document.getElementById('search-input')
             .addEventListener('input', (e) => this.searchObservation(e.target.value));
-
-        await this.loadCategories();
-        await this.loadObservations();
     }
 
     /**
@@ -86,57 +89,60 @@ class UserController {
         this.observationLayers = [];
 
         observations.forEach(obs => {
-            const color = this.getCategoryColor(obs);
-            const coords = (obs.coordinates || []).slice().sort(
-                (a, b) => (a.order_index || 0) - (b.order_index || 0)
-            );
-
-            if (!coords.length) return;
-
-            let layer = null;
-
-            if (obs.type === 'zone' && coords.length >= 3) {
-                const latlngs = coords.map(c => [parseFloat(c.latitude), parseFloat(c.longitude)]);
-                layer = L.polygon(latlngs, {
-                    color: color,
-                    fillColor: color,
-                    fillOpacity: 0.35,
-                    weight: 2
-                });
-            } else {
-                const c = coords[0];
-                layer = L.circleMarker(
-                    [parseFloat(c.latitude), parseFloat(c.longitude)],
-                    { color: color, fillColor: color, fillOpacity: 0.8, radius: 8 }
-                );
-            }
-
-            if (layer) {
-                layer.bindPopup(this.buildPopup(obs));
-                layer.addTo(this.map);
-                this.observationLayers.push(layer);
-            }
+            const layer = this.buildLayer(obs); // ← on utilise la méthode commune
+            if (!layer) return;
+            layer.bindPopup(this.buildPopup(obs));
+            layer.addTo(this.map);
+            this.observationLayers.push(layer);
         });
+    }
+    /**
+     * Creates and returns a Leaflet layer (point or zone) for an observation.
+     * Does not add it to the map — the caller decides where it goes.
+     * @param {object} obs - The observation object.
+     * @returns {L.Layer|null}
+     */
+    buildLayer(obs) {
+        const color = this.getCategoryColor(obs);
+        const coords = (obs.coordinates || [])
+            .slice()
+            .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+        if (!coords.length) return null;
+
+        if (obs.type === 'zone' && coords.length >= 3) {
+            const latlngs = coords.map(c => [parseFloat(c.latitude), parseFloat(c.longitude)]);
+            return L.polygon(latlngs, {
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.35,
+                weight: 2
+            });
+        } else {
+            const c = coords[0];
+            return L.circleMarker(
+                [parseFloat(c.latitude), parseFloat(c.longitude)],
+                { color: color, fillColor: color, fillOpacity: 0.8, radius: 8 }
+            );
+        }
     }
 
     buildPopup(obs) {
-        const catName = obs.category ? obs.category.name : '';
+        const catName = obs.category?.name ?? '';
+        const date = obs.created_at ? new Date(obs.created_at).toLocaleDateString() : '';
         const desc = obs.description ? `<p>${this.escapeHtml(obs.description)}</p>` : '';
-        let images = '';
-        if (Array.isArray(obs.images) && obs.images.length) {
-            images = obs.images.map(img =>
-                `<img src="../back/${this.escapeHtml(img.file_path)}" style="max-width:120px;margin:2px;">`
-            ).join('');
-        }
+        const images = obs.images?.map(img =>
+            `<img src="../back/${this.escapeHtml(img.file_path)}" style="max-width:120px;margin:2px;">`
+        ).join('') ?? '';
+
         return `
-            <div class="popup">
-                <h3>${this.escapeHtml(obs.title)}</h3>
-                <small>${this.escapeHtml(catName)}</small>
-                ${desc}
-                ${images}
-                <a> ecrit a la main</a>
-            </div>
-        `;
+        <div class="popup">
+            <h3>${this.escapeHtml(obs.title)}</h3>
+            ${desc}
+            ${images}
+            <small>${this.escapeHtml(catName)}${date ? ` — ${date}` : ''}</small>
+        </div>
+    `;
     }
 
     getCategoryColor(obs) {
@@ -164,7 +170,6 @@ class UserController {
         const container = document.getElementById('legend');
         if (!container) return;
 
-        container.innerHTML = '<h4>Légende</h4>';
         categories.forEach(cat => {
             const item = document.createElement('div');
             item.className = 'legend-item';
@@ -177,13 +182,9 @@ class UserController {
     }
 
     async searchObservation(keyword) {
-        if (!keyword || keyword.trim().length < 3) {
-            await this.loadObservations(); // recharge tout si moins de 3 chars
-            return;
-        }
         try {
-            if (!keyword || !keyword.trim()) {
-                await this.loadObservations();
+            if (!keyword || keyword.trim().length < 3) {
+                await this.loadObservations(); // recharge tout si moins de 3 chars
                 return;
             }
             const data = await this.observationWorker.getObservationByNameDescription(keyword);
