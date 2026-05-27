@@ -1,7 +1,8 @@
 .idea
-back/config/config.php
 .claude
-CONTEXT.md
 Dockerfile
 docker-compose.yml
+CONTEXT.md
 uploads/*
+back/temp.php
+back/config/config.php

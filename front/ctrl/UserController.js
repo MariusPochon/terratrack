@@ -194,6 +194,7 @@ class UserController {
             <h3>${this.escapeHtml(obs.title)}</h3>
             ${desc}
             ${images}
+            <br/>
             <small>${this.escapeHtml(catName)}${date ? ` — ${date}` : ''}</small>
         </div>
     `;

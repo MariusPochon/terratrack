@@ -353,9 +353,9 @@ input[type="file"] {
 }
 
 #modal-boutons button[type="submit"] {
-    background: #2ecc71;
+    background: #3498db;
 }
 
 #modal-boutons button[type="submit"]:hover {
-    background: #27ae60;
+    background: #2980b9;
 }
