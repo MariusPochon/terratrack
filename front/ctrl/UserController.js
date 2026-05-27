@@ -241,6 +241,8 @@ class UserController {
         const container = document.getElementById('legend');
         if (!container) return;
 
+        container.innerHTML = ''; // efface avant de re-remplir pour éviter les doublons
+
         categories.forEach(cat => {
             const item = document.createElement('div');
             item.className = 'legend-item';
@@ -268,6 +270,7 @@ class UserController {
             const data = await this.observationWorker.getObservationByNameDescription(keyword);
             this.observations = data;
             this.displayObservations(data);
+            this.updateCounter();
         } catch (err) {
             this.showError("Erreur lors de la recherche : " + err.message);
         }

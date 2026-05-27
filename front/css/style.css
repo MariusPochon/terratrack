@@ -1,35 +1,66 @@
-* { box-sizing: border-box; }
-
-body {
+/* ============================================================
+   Reset minimal
+   ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
     margin: 0;
+    padding: 0;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+body {
     font-family: system-ui, sans-serif;
+    font-size: 0.9rem;
     color: #222;
     background: #f5f5f5;
 }
 
+/* ============================================================
+   Header
+   ============================================================ */
 header {
     background: #2c3e50;
     color: #fff;
-    padding: 0.6rem 1rem;
+    padding: 0 1rem;
+    height: 48px;
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
 header h1 {
-    font-size: 1.2rem;
-    margin: 0;
+    font-size: 1.1rem;
+    white-space: nowrap;
+}
+
+header nav {
+    display: flex;
+    gap: 0.8rem;
 }
 
 header nav a {
     color: #fff;
     text-decoration: none;
-    margin-right: 0.8rem;
+    font-size: 0.9rem;
 }
 
+header nav a:hover {
+    text-decoration: underline;
+}
+
+/* Pousse le bouton de déconnexion à droite */
+#logout-btn {
+    margin-left: auto;
+}
+
+/* ============================================================
+   Layout principal (carte + barre latérale)
+   ============================================================ */
 main {
     display: flex;
-    height: calc(100vh - 50px);
+    height: calc(100vh - 48px);
 }
 
 #map {
@@ -38,95 +69,231 @@ main {
 }
 
 aside {
-    width: 320px;
-    padding: 0.8rem;
+    width: 300px;
+    padding: 1rem;
     background: #fff;
     border-left: 1px solid #ddd;
     overflow-y: auto;
-}
-
-aside h2, aside h3, aside h4 {
-    margin-top: 0;
-}
-
-.toolbar {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    margin-bottom: 0.6rem;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
+aside h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ============================================================
+   Boutons
+   ============================================================ */
 button {
     background: #3498db;
     border: none;
     color: #fff;
-    padding: 0.4rem 0.7rem;
-    border-radius: 3px;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
     cursor: pointer;
     font-size: 0.85rem;
-}
-button:hover { background: #2980b9; }
-
-input[type="text"], input[type="password"], textarea, select {
-    width: 100%;
-    padding: 0.4rem;
-    border: 1px solid #ccc;
-    border-radius: 3px;
     font-family: inherit;
-    margin-bottom: 0.5rem;
+    line-height: 1.4;
 }
 
-textarea { min-height: 70px; }
+button:hover {
+    background: #2980b9;
+}
 
+/* ============================================================
+   Champs de formulaire (inputs, select, textarea)
+   ============================================================ */
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: #fff;
+    color: #222;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+textarea {
+    min-height: 70px;
+    resize: vertical;
+}
+
+input[type="file"] {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+/* ============================================================
+   Toolbar (barre d'outils de la barre latérale)
+   ============================================================ */
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+/* ============================================================
+   Compteur de points / zones
+   ============================================================ */
+#counter {
+    font-size: 0.85rem;
+    color: #555;
+}
+
+#counter span {
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+/* ============================================================
+   Légende des catégories
+   ============================================================ */
 .legend-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin: 0.2rem 0;
-}
-.legend-color {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 1px solid #888;
+    font-size: 0.85rem;
 }
 
+.legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Message d'erreur
+   ============================================================ */
 .error-box {
-    background: #c0392b;
+    background: #e74c3c;
     color: #fff;
-    padding: 0.5rem 0.8rem;
-    margin: 0.5rem 0;
-    border-radius: 3px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
     display: none;
 }
 
+/* ============================================================
+   Liste des observations (barre latérale admin)
+   ============================================================ */
 .list-row {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.3rem 0;
+    padding: 0.4rem 0;
     border-bottom: 1px solid #eee;
     font-size: 0.85rem;
 }
-.list-row .list-title { flex: 1; }
-.list-row .list-type { color: #888; font-size: 0.75rem; }
 
+.list-row .list-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.list-row .list-type {
+    color: #888;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.list-row button {
+    padding: 0.2rem 0.45rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   Page de connexion
+   ============================================================ */
 .login-wrapper {
     max-width: 360px;
     margin: 4rem auto;
     background: #fff;
-    padding: 1.5rem;
-    border-radius: 5px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* ---- Modal overlay (admin draw form) ---- */
+.login-wrapper h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1.25rem;
+}
+
+.login-wrapper label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 0.25rem;
+}
+
+.login-wrapper input {
+    margin-bottom: 1rem;
+}
+
+.login-wrapper button {
+    width: 100%;
+    padding: 0.6rem;
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+}
+
+/* ============================================================
+   Popup Leaflet
+   ============================================================ */
+.popup h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem;
+}
+
+.popup p {
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+    color: #444;
+}
+
+.popup small {
+    color: #888;
+    font-size: 0.75rem;
+}
+
+.popup img {
+    max-width: 120px;
+    margin: 2px;
+    border-radius: 3px;
+}
+
+/* ============================================================
+   Modale (formulaire de saisie admin)
+   ============================================================ */
 #modal-overlay {
     display: none;
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
     z-index: 9999;
     justify-content: center;
     align-items: center;
@@ -139,57 +306,56 @@ textarea { min-height: 70px; }
 #modal {
     background: #fff;
     border-radius: 8px;
-    padding: 24px;
+    padding: 1.5rem;
     width: 420px;
     max-width: 92vw;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 #modal h2 {
-    margin: 0 0 16px;
-    font-size: 18px;
-    color: #333;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
 }
 
 #form-releve {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 0.35rem;
 }
 
 #form-releve label {
-    font-size: 13px;
-    font-weight: bold;
+    font-size: 0.8rem;
+    font-weight: 600;
     color: #555;
+    margin-top: 0.4rem;
 }
 
 #modal-status {
-    font-size: 13px;
+    font-size: 0.8rem;
     color: #555;
-    min-height: 18px;
+    min-height: 1.2em;
 }
 
 #modal-boutons {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-#modal-boutons button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
 }
 
 #btn-annuler {
     background: #ecf0f1;
     color: #333;
 }
-#btn-annuler:hover { background: #bdc3c7; }
 
-#modal-boutons button[type="submit"] { background: #2ecc71; color: #fff; }
-#modal-boutons button[type="submit"]:hover { background: #27ae60; }
+#btn-annuler:hover {
+    background: #bdc3c7;
+}
+
+#modal-boutons button[type="submit"] {
+    background: #2ecc71;
+}
+
+#modal-boutons button[type="submit"]:hover {
+    background: #27ae60;
+}

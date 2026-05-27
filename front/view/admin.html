@@ -17,7 +17,7 @@
     <nav>
         <a href="home.html">Carte publique</a>
     </nav>
-    <button id="logout-btn" style="margin-left:auto;">Déconnexion</button>
+    <button id="logout-btn">Déconnexion</button>
 </header>
 
 <main>
@@ -44,13 +44,13 @@
     </aside>
 </main>
 
-<!-- Modal : opens automatically when a marker or polygon is drawn -->
+<!-- Modale : s'ouvre automatiquement après le dessin d'un point ou d'une zone -->
 <div id="modal-overlay">
     <div id="modal">
         <h2 id="modal-titre">Nouveau relevé</h2>
 
         <form id="form-releve">
-            <!-- Hidden fields populated by AdminController -->
+            <!-- Champs cachés remplis par AdminController -->
             <input type="hidden" id="modal-type" name="type">
             <input type="hidden" id="modal-coords" name="coordinates">
 
