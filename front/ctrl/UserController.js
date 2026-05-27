@@ -75,10 +75,12 @@ class UserController {
             const data = await this.observationWorker.getObservations();
             this.observations = data;
             this.displayObservations(data);
+            this.updateCounter();
         } catch (err) {
             this.showError("Erreur lors du chargement des observations : " + err.message);
         }
     }
+
 
     /**
      * Renders observations on the map (points and zones), colored by category.
@@ -96,6 +98,18 @@ class UserController {
             this.observationLayers.push(layer);
         });
     }
+
+    updateCounter() {
+        const points = this.observations.filter(obs => obs.type === 'point').length;
+        const zones  = this.observations.filter(obs => obs.type === 'zone').length;
+
+        const elPoints = document.getElementById('counter-points');
+        const elZones  = document.getElementById('counter-zones');
+
+        if (elPoints) elPoints.textContent = points;
+        if (elZones)  elZones.textContent  = zones;
+    }
+
     /**
      * Creates and returns a Leaflet layer (point or zone) for an observation.
      * Does not add it to the map — the caller decides where it goes.
@@ -132,7 +146,7 @@ class UserController {
         const date = obs.created_at ? new Date(obs.created_at).toLocaleDateString() : '';
         const desc = obs.description ? `<p>${this.escapeHtml(obs.description)}</p>` : '';
         const images = obs.images?.map(img =>
-            `<img src="../back/${this.escapeHtml(img.file_path)}" style="max-width:120px;margin:2px;">`
+            `<img src="../../back/${this.escapeHtml(img.file_path)}" style="max-width:120px;margin:2px;">`
         ).join('') ?? '';
 
         return `

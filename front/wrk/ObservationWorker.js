@@ -32,6 +32,9 @@ class ObservationWorker {
             credentials: 'include',
             body: formData
         });
+        const text = await response.text();
+        console.log('Réponse brute:', text);
+        return JSON.parse(text);
         if (!response.ok) {
             throw new Error(`Failed to create observation (HTTP ${response.status})`);
         }

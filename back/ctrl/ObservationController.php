@@ -59,13 +59,12 @@ public function __construct()
 
             // 6. Images
             if (!empty($_FILES['images']['name'][0])) {
-                $uploadDir = __DIR__ . '/../../uploads/observations/';
                 for ($i = 0; $i < count($_FILES['images']['name']); $i++) {
                     if ($_FILES['images']['error'][$i] !== 0) continue;
                     $extension = pathinfo($_FILES['images']['name'][$i], PATHINFO_EXTENSION);
                     $fileName  = $observation->getPkObservation() . '_' . $i . '.' . $extension;
-                    $filePath  = 'uploads/observations/' . $fileName;
-                    move_uploaded_file($_FILES['images']['tmp_name'][$i], $uploadDir . $fileName);
+                    $filePath  = '../uploads/' . $fileName;
+                    move_uploaded_file($_FILES['images']['tmp_name'][$i], UPLOAD_PATH . $fileName);
                     $this->imageWorker->create(new Image($observation->getPkObservation(), $filePath));
                 }
             }

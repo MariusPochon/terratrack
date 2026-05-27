@@ -1,7 +1,7 @@
 .idea
-back\config\config.php
+back/config/config.php
 .claude
 CONTEXT.md
 Dockerfile
 docker-compose.yml
-images
+uploads/*

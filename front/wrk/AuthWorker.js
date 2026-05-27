@@ -23,6 +23,10 @@ class AuthWorker {
         return await response.json();
     }
 
+    /**
+     * sdsdws
+     * @returns {Promise<any>}
+     */
     async postLogout() {
         const response = await fetch(`${this.baseUrl}?action=logout`, {
             method: 'POST',

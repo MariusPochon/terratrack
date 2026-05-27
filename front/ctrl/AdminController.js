@@ -173,10 +173,6 @@ class AdminController extends UserController {
         document.getElementById('modal-category-select')
             .addEventListener('change', (e) => {
                 const cat = this.categoriesById[e.target.value];
-                if (!cat || !this.currentLayer) return;
-                if (this.currentLayer.setIcon) {
-                    this.currentLayer.setStyle({ color: cat.color, fillColor: cat.color });
-                }
             });
 
         document.getElementById('form-releve')
@@ -347,7 +343,7 @@ class AdminController extends UserController {
             layer = L.polygon(latlngs, { color, fillColor: color, fillOpacity: 0.3 });
         } else if (sorted.length) {
             layer = L.circleMarker(
-                [parseFloat(c.latitude), parseFloat(c.longitude)],
+                [parseFloat(sorted[0].latitude), parseFloat(sorted[0].longitude)],
                 { color, fillColor: color, fillOpacity: 0.8, radius: 8 }
             );
         } else {
