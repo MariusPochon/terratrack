@@ -1,20 +1,35 @@
 <?php
 
+/**
+ * Worker gérant les requêtes PDO liées aux coordonnées géographiques.
+ * Fournit les méthodes de lecture, d'insertion et de suppression de la table t_coordinate.
+ */
+
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../model/Coordinate.php';
 
 class CoordinateWorker {
 
+    /** @var PDO Instance de connexion à la base de données */
     private PDO $pdo;
 
+    /**
+     * Initialise le worker avec la connexion PDO partagée.
+     */
     public function __construct() {
         $this->pdo = Database::getInstance()->getConnection();
     }
 
     // -------------------------------------------------------------------------
-    // Hydration
+    // Hydratation
     // -------------------------------------------------------------------------
 
+    /**
+     * Transforme une ligne de résultat PDO en objet Coordinate.
+     *
+     * @param  array $row Ligne associative retournée par PDO
+     * @return Coordinate
+     */
     private function hydrate(array $row): Coordinate {
         return new Coordinate(
             (int)   $row['fk_observation'],
@@ -26,10 +41,16 @@ class CoordinateWorker {
     }
 
     // -------------------------------------------------------------------------
-    // Queries
+    // Requêtes
     // -------------------------------------------------------------------------
 
-    /** @return Coordinate[] */
+    /**
+     * Retourne toutes les coordonnées d'une observation, triées par order_index croissant.
+     *
+     * @param  int $fkObservation Identifiant de l'observation parente
+     * @return Coordinate[]
+     * @throws Exception En cas d'erreur PDO
+     */
     public function findByObservationId(int $fkObservation): array {
         try {
             $stmt = $this->pdo->prepare(
@@ -50,8 +71,12 @@ class CoordinateWorker {
     }
 
     /**
-     * Insère un tableau de Coordinate en une passe.
-     * @param Coordinate[] $coordinates
+     * Insère un tableau de coordonnées en base en une seule passe.
+     * Met à jour la clé primaire de chaque objet après insertion.
+     *
+     * @param  Coordinate[] $coordinates Tableau d'objets Coordinate à insérer
+     * @return void
+     * @throws Exception En cas d'erreur PDO
      */
     public function createMany(array $coordinates): void {
         try {
@@ -74,6 +99,13 @@ class CoordinateWorker {
         }
     }
 
+    /**
+     * Supprime toutes les coordonnées associées à une observation.
+     *
+     * @param  int $fkObservation Identifiant de l'observation parente
+     * @return void
+     * @throws Exception En cas d'erreur PDO
+     */
     public function deleteByObservationId(int $fkObservation): void {
         try {
             $stmt = $this->pdo->prepare(

@@ -1,10 +1,11 @@
 /**
- * Admin controller. Extends UserController with CRUD operations,
- * Leaflet.draw integration for point/zone creation, and auth management.
+ * Contrôleur administrateur. Étend UserController avec les opérations CRUD,
+ * l'intégration de Leaflet.draw pour la création de points/zones,
+ * et la gestion de l'authentification.
  *
- * Pattern taken from test-09: modal overlay opens automatically after drawing,
- * the layer color updates live when the user picks a category, and cancelling
- * removes the drawn layer from the map.
+ * Particularité : deux FeatureGroups distincts sont utilisés — drawnItems pour
+ * les couches en cours de dessin, et savedItems pour les observations chargées
+ * depuis la base de données. Annuler ou fermer la modale supprime la couche de drawnItems.
  */
 class AdminController extends UserController {
 
@@ -12,17 +13,23 @@ class AdminController extends UserController {
         super();
         this.authWorker   = new AuthWorker();
 
-        this.drawnItems   = null;  // L.FeatureGroup — shapes being drawn this session
-        this.savedItems   = null;  // L.FeatureGroup — observations loaded from DB
-        this.currentLayer = null;  // reference to the layer currently in the modal
+        this.drawnItems   = null;  // L.FeatureGroup — couches dessinées lors de cette session
+        this.savedItems   = null;  // L.FeatureGroup — observations chargées depuis la BDD
+        this.currentLayer = null;  // référence à la couche actuellement ouverte dans la modale
 
-        this.editingId    = null;  // pk_observation being edited (null = create mode)
+        this.editingId    = null;  // pk_observation en cours d'édition (null = mode création)
     }
 
     // -------------------------------------------------------------------------
-    // Bootstrap
+    // Initialisation
     // -------------------------------------------------------------------------
 
+    /**
+     * Initialise la page admin : vérifie l'authentification, configure la carte,
+     * charge les données et peuple les composants de l'interface.
+     *
+     * @returns {Promise<void>}
+     */
     async init() {
         const auth = await this.authWorker.check();
         if (!auth || !auth.authenticated) {
@@ -46,8 +53,15 @@ class AdminController extends UserController {
     // Leaflet.draw
     // -------------------------------------------------------------------------
 
+    /**
+     * Configure les outils de dessin Leaflet.draw sur la carte.
+     * Deux FeatureGroups sont ajoutés à la carte, et les événements de fin de dessin
+     * ouvrent automatiquement la modale de saisie.
+     *
+     * @returns {void}
+     */
     setupDraw() {
-        // Two separate FeatureGroups: drawn (current session) and saved (from DB)
+        // Deux FeatureGroups séparés : dessin en cours et observations sauvegardées
         this.drawnItems = new L.FeatureGroup();
         this.savedItems = new L.FeatureGroup();
         this.map.addLayer(this.savedItems);
@@ -66,7 +80,7 @@ class AdminController extends UserController {
         });
         this.map.addControl(drawControl);
 
-        // User finishes drawing → add to drawnItems and open the modal
+        // L'utilisateur termine un dessin → ajout à drawnItems et ouverture de la modale
         this.map.on(L.Draw.Event.CREATED, (e) => {
             const layer = e.layer;
             const type  = e.layerType; // 'marker' | 'polygon'
@@ -87,9 +101,17 @@ class AdminController extends UserController {
     }
 
     // -------------------------------------------------------------------------
-    // Modal
+    // Modale
     // -------------------------------------------------------------------------
 
+    /**
+     * Ouvre la modale en mode création pour un nouveau point ou une nouvelle zone.
+     * Réinitialise le formulaire et pré-remplit les coordonnées depuis la couche dessinée.
+     *
+     * @param {string}   type  Type de l'observation : "point" ou "zone"
+     * @param {L.Layer}  layer Couche Leaflet dont on extrait les coordonnées
+     * @returns {void}
+     */
     openModal(type, layer) {
         this.editingId = null;
 
@@ -100,7 +122,7 @@ class AdminController extends UserController {
         document.getElementById('modal-titre').textContent  =
             type === 'point' ? 'Nouveau point' : 'Nouvelle zone';
 
-        // Store coords in the hidden field (will be read at submit time)
+        // Stocke les coordonnées dans le champ caché pour lecture à la soumission
         document.getElementById('modal-coords').value = JSON.stringify(
             this.extractCoords(layer, type)
         );
@@ -108,6 +130,14 @@ class AdminController extends UserController {
         document.getElementById('modal-overlay').classList.add('actif');
     }
 
+    /**
+     * Ouvre la modale en mode édition pour une observation existante.
+     * Pré-remplit tous les champs avec les données actuelles de l'observation.
+     *
+     * @param {Object}  obs   Objet observation à éditer
+     * @param {L.Layer} layer Couche Leaflet représentant l'observation sur la carte
+     * @returns {void}
+     */
     openModalForEdit(obs, layer) {
         this.editingId = obs.pk_observation;
 
@@ -125,6 +155,13 @@ class AdminController extends UserController {
         document.getElementById('modal-overlay').classList.add('actif');
     }
 
+    /**
+     * Ferme la modale et réinitialise les références internes.
+     * Si removeLayer est true, supprime également la couche de drawnItems.
+     *
+     * @param {boolean} [removeLayer=false] Supprimer la couche de dessin en cours
+     * @returns {void}
+     */
     closeModal(removeLayer = false) {
         if (removeLayer && this.currentLayer) {
             this.drawnItems.removeLayer(this.currentLayer);
@@ -135,14 +172,18 @@ class AdminController extends UserController {
     }
 
     /**
-     * Extracts coordinates from a Leaflet layer into [{latitude, longitude, order_index}].
+     * Extrait les coordonnées d'une couche Leaflet au format [{latitude, longitude, order_index}].
+     *
+     * @param {L.Layer} layer Couche Leaflet (marker ou polygon)
+     * @param {string}  type  Type de la couche : "point" ou "zone"
+     * @returns {Array<{latitude: number, longitude: number, order_index: number}>}
      */
     extractCoords(layer, type) {
         if (type === 'point') {
             const ll = layer.getLatLng();
             return [{ latitude: ll.lat, longitude: ll.lng, order_index: 0 }];
         }
-        // polygon
+        // polygon : récupère le premier anneau de coordonnées
         return layer.getLatLngs()[0].map((ll, idx) => ({
             latitude:    ll.lat,
             longitude:   ll.lng,
@@ -151,14 +192,20 @@ class AdminController extends UserController {
     }
 
     // -------------------------------------------------------------------------
-    // Events
+    // Événements
     // -------------------------------------------------------------------------
 
+    /**
+     * Attache les écouteurs d'événements spécifiques à l'admin
+     * (déconnexion, annulation de modale, mise à jour de couleur en direct, soumission).
+     *
+     * @returns {void}
+     */
     bindAdminEvents() {
         document.getElementById('logout-btn')
             .addEventListener('click', () => this.logout());
 
-        // Cancel button — also triggers when clicking outside the modal box
+        // Bouton Annuler — ferme également la modale en cliquant sur l'overlay en dehors
         document.getElementById('btn-annuler')
             .addEventListener('click', () => this.closeModal(true));
 
@@ -169,7 +216,6 @@ class AdminController extends UserController {
                 }
             });
 
-        // Live color update when the user picks a category in the modal
         document.getElementById('modal-category-select')
             .addEventListener('change', (e) => {
                 const cat = this.categoriesById[e.target.value];
@@ -180,12 +226,18 @@ class AdminController extends UserController {
     }
 
     // -------------------------------------------------------------------------
-    // Category select population
+    // Peuplement du select de catégories
     // -------------------------------------------------------------------------
 
+    /**
+     * Peuple le menu déroulant des catégories dans la modale.
+     * Conserve l'option vide par défaut et supprime les options précédentes.
+     *
+     * @returns {void}
+     */
     populateCategorySelect() {
         const select = document.getElementById('modal-category-select');
-        // Keep the default empty option, remove the rest
+        // Conserve l'option vide initiale, supprime toutes les autres
         select.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
 
         this.categories.forEach(cat => {
@@ -198,9 +250,16 @@ class AdminController extends UserController {
     }
 
     // -------------------------------------------------------------------------
-    // Override displayObservations to use savedItems FeatureGroup
+    // Surcharge de displayObservations pour utiliser savedItems
     // -------------------------------------------------------------------------
 
+    /**
+     * Affiche les observations dans le FeatureGroup savedItems (géré par Leaflet.draw).
+     * Surcharge la méthode parente pour éviter d'ajouter les couches directement à la carte.
+     *
+     * @param {Array} observations Tableau d'objets observation
+     * @returns {void}
+     */
     displayObservations(observations) {
         if (!this.savedItems) {
             this.showError("Erreur interne : la carte n'est pas encore prête.");
@@ -209,7 +268,7 @@ class AdminController extends UserController {
         this.savedItems.clearLayers();
 
         observations.forEach(obs => {
-            const layer = this.buildLayer(obs); // ← même méthode que le parent
+            const layer = this.buildLayer(obs); // même méthode de construction que le parent
             if (!layer) return;
             layer.bindPopup(this.buildPopup(obs), { maxWidth: 260 });
             this.savedItems.addLayer(layer);
@@ -217,9 +276,15 @@ class AdminController extends UserController {
     }
 
     // -------------------------------------------------------------------------
-    // Form submit
+    // Soumission du formulaire
     // -------------------------------------------------------------------------
 
+    /**
+     * Lit les données de la modale, les envoie au serveur (création ou mise à jour),
+     * puis déplace la couche de drawnItems vers savedItems et rafraîchit la liste.
+     *
+     * @returns {Promise<void>}
+     */
     async submitModal() {
         const title      = document.getElementById('modal-title-input').value.trim();
         const description = document.getElementById('modal-description-input').value.trim();
@@ -259,7 +324,7 @@ class AdminController extends UserController {
             }
 
             if (result && (result.success || result.pk_observation)) {
-                // Bind the final styled popup to the layer on the map
+                // Attache le popup définitif à la couche sur la carte
                 if (this.currentLayer) {
                     const fakeObs = {
                         title,
@@ -273,7 +338,7 @@ class AdminController extends UserController {
                     };
                     this.currentLayer.bindPopup(this.buildPopup(fakeObs), { maxWidth: 260 });
 
-                    // Move from drawnItems to savedItems so it's no longer editable via draw tools
+                    // Déplace la couche de drawnItems vers savedItems pour qu'elle ne soit plus modifiable via les outils de dessin
                     this.drawnItems.removeLayer(this.currentLayer);
                     this.savedItems.addLayer(this.currentLayer);
                 }
@@ -292,9 +357,15 @@ class AdminController extends UserController {
     }
 
     // -------------------------------------------------------------------------
-    // Observation list (sidebar)
+    // Liste des observations (barre latérale)
     // -------------------------------------------------------------------------
 
+    /**
+     * Affiche la liste des observations dans la barre latérale (#observation-list).
+     * Génère les boutons Éditer et Supprimer pour chaque ligne.
+     *
+     * @returns {void}
+     */
     listObservations() {
         const list = document.getElementById('observation-list');
         if (!list) return;
@@ -324,6 +395,13 @@ class AdminController extends UserController {
         });
     }
 
+    /**
+     * Charge une observation en mode édition : crée une couche temporaire dans drawnItems,
+     * recentre la carte et ouvre la modale pré-remplie.
+     *
+     * @param {number} pkObservation Identifiant de l'observation à éditer
+     * @returns {void}
+     */
     loadObservationForEdit(pkObservation) {
         const obs = this.observations.find(o => o.pk_observation === pkObservation);
         if (!obs) return;
@@ -334,7 +412,7 @@ class AdminController extends UserController {
 
         const color = this.getCategoryColor(obs);
 
-        // Build a temporary editable layer in drawnItems
+        // Construit une couche temporaire modifiable dans drawnItems
         this.drawnItems.clearLayers();
         let layer;
 
@@ -353,7 +431,7 @@ class AdminController extends UserController {
         this.drawnItems.addLayer(layer);
         this.currentLayer = layer;
 
-        // Pan map to the observation
+        // Recentre la carte sur l'observation
         if (layer.getLatLng) {
             this.map.setView(layer.getLatLng(), 15);
         } else if (layer.getBounds) {
@@ -363,6 +441,13 @@ class AdminController extends UserController {
         this.openModalForEdit(obs, layer);
     }
 
+    /**
+     * Demande confirmation puis supprime une observation.
+     * Rafraîchit la liste après suppression.
+     *
+     * @param {number} pkObservation Identifiant de l'observation à supprimer
+     * @returns {Promise<void>}
+     */
     async deleteObservation(pkObservation) {
         if (!confirm("Supprimer cette observation ?")) return;
         try {
@@ -375,11 +460,17 @@ class AdminController extends UserController {
     }
 
     // -------------------------------------------------------------------------
-    // Auth
+    // Authentification
     // -------------------------------------------------------------------------
 
+    /**
+     * Déconnecte l'utilisateur côté serveur puis redirige vers la page de connexion.
+     * La redirection se produit même en cas d'erreur réseau.
+     *
+     * @returns {Promise<void>}
+     */
     async logout() {
-        try { await this.authWorker.postLogout(); } catch (_) { /* redirect anyway */ }
+        try { await this.authWorker.postLogout(); } catch (_) { /* redirection quoi qu'il arrive */ }
         window.location.href = 'login.html';
     }
 }

@@ -1,5 +1,6 @@
 /**
- * Worker handling category-related HTTP requests.
+ * Worker gérant les requêtes HTTP liées aux catégories.
+ * Communique avec le backend via l'API REST pour récupérer la liste des catégories.
  */
 class CategoryWorker {
 
@@ -7,6 +8,12 @@ class CategoryWorker {
         this.baseUrl = '../../back/index.php';
     }
 
+    /**
+     * Récupère la liste complète des catégories depuis le serveur.
+     *
+     * @returns {Promise<Array>} Tableau d'objets catégorie
+     * @throws {Error} Si la requête échoue ou si le serveur retourne une erreur HTTP
+     */
     async getCategories() {
         try {
             const response = await fetch(`${this.baseUrl}?action=getCategories`, {

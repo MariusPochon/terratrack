@@ -1,9 +1,20 @@
+/**
+ * Contrôleur gérant la page de connexion.
+ * Écoute la soumission du formulaire, appelle AuthWorker et redirige
+ * l'utilisateur vers la page admin en cas de succès.
+ */
 class LoginController {
 
     constructor() {
         this.authWorker = new AuthWorker();
     }
 
+    /**
+     * Initialise les écouteurs d'événements sur le formulaire de connexion.
+     * Doit être appelé une fois le DOM chargé.
+     *
+     * @returns {void}
+     */
     init() {
         const form = document.getElementById('login-form');
         console.log('form trouvé:', form);
@@ -17,6 +28,15 @@ class LoginController {
         });
     }
 
+    /**
+     * Envoie les identifiants au serveur et gère la réponse.
+     * Redirige vers admin.html si la connexion réussit,
+     * affiche un message d'erreur sinon.
+     *
+     * @param {string} username Nom d'utilisateur saisi
+     * @param {string} password Mot de passe saisi
+     * @returns {Promise<void>}
+     */
     async login(username, password) {
         console.log('login() appelé avec:', username, password);
         if (!username || !password) {
@@ -41,6 +61,12 @@ class LoginController {
         }
     }
 
+    /**
+     * Affiche un message d'erreur dans la zone dédiée (#error).
+     *
+     * @param {string} message Message à afficher
+     * @returns {void}
+     */
     showError(message) {
         const box = document.getElementById('error');
         if (box) {

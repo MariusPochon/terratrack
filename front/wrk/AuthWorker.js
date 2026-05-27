@@ -1,5 +1,6 @@
 /**
- * Worker handling authentication-related HTTP requests.
+ * Worker gérant les requêtes HTTP liées à l'authentification.
+ * Communique avec le backend pour la connexion, la déconnexion et la vérification de session.
  */
 class AuthWorker {
 
@@ -7,6 +8,14 @@ class AuthWorker {
         this.baseUrl = '../../back/index.php';
     }
 
+    /**
+     * Envoie les identifiants de connexion au serveur via POST.
+     *
+     * @param {string} username Nom d'utilisateur
+     * @param {string} password Mot de passe en clair
+     * @returns {Promise<Object>} Réponse JSON du serveur (contient "success" ou "error")
+     * @throws {Error} Si la requête échoue ou si le serveur retourne une erreur HTTP
+     */
     async postLogin(username, password) {
         try {
             const formData = new FormData();
@@ -28,8 +37,11 @@ class AuthWorker {
     }
 
     /**
-     * sdsdws
-     * @returns {Promise<any>}
+     * Envoie une requête de déconnexion au serveur.
+     * Détruit la session côté serveur.
+     *
+     * @returns {Promise<Object>} Réponse JSON du serveur
+     * @throws {Error} Si la requête échoue ou si le serveur retourne une erreur HTTP
      */
     async postLogout() {
         try {
@@ -46,6 +58,13 @@ class AuthWorker {
         }
     }
 
+    /**
+     * Vérifie si l'utilisateur dispose d'une session active côté serveur.
+     * En cas d'erreur HTTP, retourne { authenticated: false } sans lever d'exception.
+     *
+     * @returns {Promise<Object>} Objet contenant la propriété booléenne "authenticated"
+     * @throws {Error} Si une erreur réseau survient
+     */
     async check() {
         try {
             const response = await fetch(`${this.baseUrl}?action=checkAuth`, {

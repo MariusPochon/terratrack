@@ -1,5 +1,7 @@
 /**
- * Worker handling all observation-related HTTP requests.
+ * Worker gérant toutes les requêtes HTTP liées aux observations.
+ * Fournit les méthodes de lecture, création, mise à jour et suppression
+ * via l'API REST du backend.
  */
 class ObservationWorker {
 
@@ -7,6 +9,12 @@ class ObservationWorker {
         this.baseUrl = '../../back/index.php';
     }
 
+    /**
+     * Récupère la liste complète des observations depuis le serveur.
+     *
+     * @returns {Promise<Array>} Tableau d'objets observation (avec coordonnées, images et catégorie)
+     * @throws {Error} Si la requête échoue ou si le serveur retourne une erreur HTTP
+     */
     async getObservations() {
         try {
             const response = await fetch(`${this.baseUrl}?action=getObservations`, {
@@ -21,6 +29,13 @@ class ObservationWorker {
         }
     }
 
+    /**
+     * Recherche des observations dont le titre ou la description contient le mot-clé.
+     *
+     * @param {string} keyword Mot-clé à rechercher (minimum 3 caractères côté serveur)
+     * @returns {Promise<Array>} Tableau d'objets observation correspondant à la recherche
+     * @throws {Error} Si la requête échoue ou si le serveur retourne une erreur HTTP
+     */
     async getObservationByNameDescription(keyword) {
         try {
             const url = `${this.baseUrl}?action=searchObservations&q=${encodeURIComponent(keyword)}`;
@@ -34,6 +49,13 @@ class ObservationWorker {
         }
     }
 
+    /**
+     * Crée une nouvelle observation en envoyant les données du formulaire au serveur.
+     *
+     * @param {FormData} formData Données du formulaire (titre, description, type, coordonnées, images)
+     * @returns {Promise<Object>} Réponse JSON du serveur (contient "success" et "id")
+     * @throws {Error} Si la requête échoue ou si la réponse n'est pas du JSON valide
+     */
     async postObservation(formData) {
         try {
             const response = await fetch(`${this.baseUrl}?action=createObservation`, {
@@ -53,6 +75,14 @@ class ObservationWorker {
         }
     }
 
+    /**
+     * Met à jour une observation existante identifiée par son id.
+     *
+     * @param {number} pkObservation Identifiant de l'observation à modifier
+     * @param {FormData} formData    Nouvelles données du formulaire
+     * @returns {Promise<Object>}    Réponse JSON du serveur
+     * @throws {Error} Si la requête échoue ou si le serveur retourne une erreur HTTP
+     */
     async putObservation(pkObservation, formData) {
         try {
             const url = `${this.baseUrl}?action=updateObservation&id=${encodeURIComponent(pkObservation)}`;
@@ -70,6 +100,13 @@ class ObservationWorker {
         }
     }
 
+    /**
+     * Supprime une observation identifiée par son id.
+     *
+     * @param {number} pkObservation Identifiant de l'observation à supprimer
+     * @returns {Promise<Object>}    Réponse JSON du serveur (contient "success")
+     * @throws {Error} Si la requête échoue ou si le serveur retourne une erreur HTTP
+     */
     async deleteObservation(pkObservation) {
         try {
             const formData = new FormData();

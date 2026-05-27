@@ -1,20 +1,35 @@
 <?php
 
+/**
+ * Worker gérant les requêtes PDO liées aux images.
+ * Fournit les méthodes de lecture, d'insertion et de suppression de la table t_image.
+ */
+
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../model/Image.php';
 
 class ImageWorker {
 
+    /** @var PDO Instance de connexion à la base de données */
     private PDO $pdo;
 
+    /**
+     * Initialise le worker avec la connexion PDO partagée.
+     */
     public function __construct() {
         $this->pdo = Database::getInstance()->getConnection();
     }
 
     // -------------------------------------------------------------------------
-    // Hydration
+    // Hydratation
     // -------------------------------------------------------------------------
 
+    /**
+     * Transforme une ligne de résultat PDO en objet Image.
+     *
+     * @param  array $row Ligne associative retournée par PDO
+     * @return Image
+     */
     private function hydrate(array $row): Image {
         return new Image(
             (int) $row['fk_observation'],
@@ -24,10 +39,16 @@ class ImageWorker {
     }
 
     // -------------------------------------------------------------------------
-    // Queries
+    // Requêtes
     // -------------------------------------------------------------------------
 
-    /** @return Image[] */
+    /**
+     * Retourne toutes les images associées à une observation.
+     *
+     * @param  int $fkObservation Identifiant de l'observation parente
+     * @return Image[]
+     * @throws Exception En cas d'erreur PDO
+     */
     public function findByObservationId(int $fkObservation): array {
         try {
             $stmt = $this->pdo->prepare(
@@ -45,6 +66,13 @@ class ImageWorker {
         }
     }
 
+    /**
+     * Insère une image en base et met à jour sa clé primaire.
+     *
+     * @param  Image $image Objet Image à insérer
+     * @return Image        L'objet Image avec sa clé primaire renseignée
+     * @throws Exception En cas d'erreur PDO
+     */
     public function create(Image $image): Image {
         try {
             $stmt = $this->pdo->prepare(
@@ -63,6 +91,13 @@ class ImageWorker {
         }
     }
 
+    /**
+     * Supprime une image par son identifiant.
+     *
+     * @param  int $pkImage Clé primaire de l'image
+     * @return void
+     * @throws Exception En cas d'erreur PDO
+     */
     public function delete(int $pkImage): void {
         try {
             $stmt = $this->pdo->prepare('DELETE FROM t_image WHERE pk_image = :pk_image');
@@ -72,6 +107,13 @@ class ImageWorker {
         }
     }
 
+    /**
+     * Supprime toutes les images associées à une observation.
+     *
+     * @param  int $fkObservation Identifiant de l'observation parente
+     * @return void
+     * @throws Exception En cas d'erreur PDO
+     */
     public function deleteByObservationId(int $fkObservation): void {
         try {
             $stmt = $this->pdo->prepare('DELETE FROM t_image WHERE fk_observation = :fk_observation');
