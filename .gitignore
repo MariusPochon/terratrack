@@ -4,3 +4,4 @@ back\config\config.php
 CONTEXT.md
 Dockerfile
 docker-compose.yml
+images
