@@ -8,19 +8,23 @@ class AuthWorker {
     }
 
     async postLogin(username, password) {
-        const formData = new FormData();
-        formData.append('username', username);
-        formData.append('password', password);
+        try {
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
 
-        const response = await fetch(`${this.baseUrl}?action=login`, {
-            method: 'POST',
-            credentials: 'include',
-            body: formData
-        });
-        if (!response.ok) {
-            throw new Error(`Erreur lors du Login (HTTP ${response.status})`);
+            const response = await fetch(`${this.baseUrl}?action=login`, {
+                method: 'POST',
+                credentials: 'include',
+                body: formData
+            });
+            if (!response.ok) {
+                throw new Error(`Erreur lors du Login (HTTP ${response.status})`);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Impossible de se connecter : ${error.message}`);
         }
-        return await response.json();
     }
 
     /**
@@ -28,23 +32,31 @@ class AuthWorker {
      * @returns {Promise<any>}
      */
     async postLogout() {
-        const response = await fetch(`${this.baseUrl}?action=logout`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-        if (!response.ok) {
-            throw new Error(`Logout failed (HTTP ${response.status})`);
+        try {
+            const response = await fetch(`${this.baseUrl}?action=logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                throw new Error(`Logout failed (HTTP ${response.status})`);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Impossible de se déconnecter : ${error.message}`);
         }
-        return await response.json();
     }
 
     async check() {
-        const response = await fetch(`${this.baseUrl}?action=checkAuth`, {
-            credentials: 'include'
-        });
-        if (!response.ok) {
-            return { authenticated: false };
+        try {
+            const response = await fetch(`${this.baseUrl}?action=checkAuth`, {
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                return { authenticated: false };
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Impossible de vérifier l'authentification : ${error.message}`);
         }
-        return await response.json();
     }
 }

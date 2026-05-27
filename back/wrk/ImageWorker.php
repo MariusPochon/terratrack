@@ -29,39 +29,55 @@ class ImageWorker {
 
     /** @return Image[] */
     public function findByObservationId(int $fkObservation): array {
-        $stmt = $this->pdo->prepare(
-            'SELECT * FROM t_image WHERE fk_observation = :fk_observation'
-        );
-        $stmt->execute([':fk_observation' => $fkObservation]);
+        try {
+            $stmt = $this->pdo->prepare(
+                'SELECT * FROM t_image WHERE fk_observation = :fk_observation'
+            );
+            $stmt->execute([':fk_observation' => $fkObservation]);
 
-        $images = [];
-        foreach ($stmt->fetchAll() as $row) {
-            $images[] = $this->hydrate($row);
+            $images = [];
+            foreach ($stmt->fetchAll() as $row) {
+                $images[] = $this->hydrate($row);
+            }
+            return $images;
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la récupération des images (observation=$fkObservation) : " . $e->getMessage());
         }
-        return $images;
     }
 
     public function create(Image $image): Image {
-        $stmt = $this->pdo->prepare(
-            'INSERT INTO t_image (fk_observation, file_path)
-             VALUES (:fk_observation, :file_path)'
-        );
-        $stmt->execute([
-            ':fk_observation' => $image->getFkObservation(),
-            ':file_path'      => $image->getFilePath(),
-        ]);
+        try {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO t_image (fk_observation, file_path)
+                 VALUES (:fk_observation, :file_path)'
+            );
+            $stmt->execute([
+                ':fk_observation' => $image->getFkObservation(),
+                ':file_path'      => $image->getFilePath(),
+            ]);
 
-        $image->setPkImage((int) $this->pdo->lastInsertId());
-        return $image;
+            $image->setPkImage((int) $this->pdo->lastInsertId());
+            return $image;
+        } catch (PDOException $e) {
+            throw new Exception('Erreur lors de la création de l\'image : ' . $e->getMessage());
+        }
     }
 
     public function delete(int $pkImage): void {
-        $stmt = $this->pdo->prepare('DELETE FROM t_image WHERE pk_image = :pk_image');
-        $stmt->execute([':pk_image' => $pkImage]);
+        try {
+            $stmt = $this->pdo->prepare('DELETE FROM t_image WHERE pk_image = :pk_image');
+            $stmt->execute([':pk_image' => $pkImage]);
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la suppression de l'image (id=$pkImage) : " . $e->getMessage());
+        }
     }
 
     public function deleteByObservationId(int $fkObservation): void {
-        $stmt = $this->pdo->prepare('DELETE FROM t_image WHERE fk_observation = :fk_observation');
-        $stmt->execute([':fk_observation' => $fkObservation]);
+        try {
+            $stmt = $this->pdo->prepare('DELETE FROM t_image WHERE fk_observation = :fk_observation');
+            $stmt->execute([':fk_observation' => $fkObservation]);
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la suppression des images (observation=$fkObservation) : " . $e->getMessage());
+        }
     }
 }

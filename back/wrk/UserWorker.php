@@ -27,10 +27,14 @@ class UserWorker {
     // -------------------------------------------------------------------------
 
     public function findByUsername(string $username): ?User {
-        $stmt = $this->pdo->prepare('SELECT * FROM t_user WHERE username = :username');
-        $stmt->execute([':username' => $username]);
+        try {
+            $stmt = $this->pdo->prepare('SELECT * FROM t_user WHERE username = :username');
+            $stmt->execute([':username' => $username]);
 
-        $row = $stmt->fetch();
-        return $row ? $this->hydrate($row) : null;
+            $row = $stmt->fetch();
+            return $row ? $this->hydrate($row) : null;
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la récupération de l'utilisateur '$username' : " . $e->getMessage());
+        }
     }
 }

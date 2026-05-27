@@ -8,12 +8,16 @@ class CategoryWorker {
     }
 
     async getCategories() {
-        const response = await fetch(`${this.baseUrl}?action=getCategories`, {
-            credentials: 'include'
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to load categories (HTTP ${response.status})`);
+        try {
+            const response = await fetch(`${this.baseUrl}?action=getCategories`, {
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to load categories (HTTP ${response.status})`);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Impossible de charger les catégories : ${error.message}`);
         }
-        return await response.json();
     }
 }

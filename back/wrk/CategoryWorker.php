@@ -29,21 +29,29 @@ class CategoryWorker {
     // -------------------------------------------------------------------------
 
     public function findAll(): array {
-        $stmt = $this->pdo->prepare('SELECT * FROM t_category ORDER BY name ASC');
-        $stmt->execute();
+        try {
+            $stmt = $this->pdo->prepare('SELECT * FROM t_category ORDER BY name ASC');
+            $stmt->execute();
 
-        $categories = [];
-        foreach ($stmt->fetchAll() as $row) {
-            $categories[] = $this->hydrate($row);
+            $categories = [];
+            foreach ($stmt->fetchAll() as $row) {
+                $categories[] = $this->hydrate($row);
+            }
+            return $categories;
+        } catch (PDOException $e) {
+            throw new Exception('Erreur lors de la récupération des catégories : ' . $e->getMessage());
         }
-        return $categories;
     }
 
     public function findById(int $pkCategory): ?Category {
-        $stmt = $this->pdo->prepare('SELECT * FROM t_category WHERE pk_category = :pk_category');
-        $stmt->execute([':pk_category' => $pkCategory]);
+        try {
+            $stmt = $this->pdo->prepare('SELECT * FROM t_category WHERE pk_category = :pk_category');
+            $stmt->execute([':pk_category' => $pkCategory]);
 
-        $row = $stmt->fetch();
-        return $row ? $this->hydrate($row) : null;
+            $row = $stmt->fetch();
+            return $row ? $this->hydrate($row) : null;
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la récupération de la catégorie (id=$pkCategory) : " . $e->getMessage());
+        }
     }
 }
