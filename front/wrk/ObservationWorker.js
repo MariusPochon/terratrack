@@ -63,15 +63,38 @@ class ObservationWorker {
                 credentials: 'include',
                 body: formData
             });
-            const text = await response.text();
-            console.log('Réponse brute:', text);
-            return JSON.parse(text);
             if (!response.ok) {
                 throw new Error(`Failed to create observation (HTTP ${response.status})`);
             }
             return await response.json();
         } catch (error) {
             throw new Error(`Impossible de créer l'observation : ${error.message}`);
+        }
+    }
+
+    /**
+     * Supprime une image par son identifiant (fichier physique + entrée en base).
+     *
+     * @param {number} pkImage Identifiant de l'image à supprimer
+     * @returns {Promise<Object>} Réponse JSON du serveur (contient "success")
+     * @throws {Error} Si la requête échoue ou si le serveur retourne une erreur HTTP
+     */
+    async deleteImage(pkImage) {
+        try {
+            const formData = new FormData();
+            formData.append('pk_image', pkImage);
+
+            const response = await fetch(`${this.baseUrl}?action=deleteImage`, {
+                method: 'POST',
+                credentials: 'include',
+                body: formData
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to delete image (HTTP ${response.status})`);
+            }
+            return await response.json();
+        } catch (error) {
+            throw new Error(`Impossible de supprimer l'image : ${error.message}`);
         }
     }
 

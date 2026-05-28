@@ -67,6 +67,11 @@ switch ($action) {
         (new ObservationController())->update();
         break;
 
+    case 'deleteImage':
+        require_once __DIR__ . '/ctrl/ObservationController.php';
+        (new ObservationController())->deleteImage();
+        break;
+
     case 'getCategories':
         require_once __DIR__ . '/ctrl/CategoryController.php';
         (new CategoryController())->index();

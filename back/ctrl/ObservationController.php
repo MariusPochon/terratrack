@@ -55,6 +55,7 @@ class ObservationController {
         $type        = $_POST['type']        ?? null;
         $fkCategory  = $_POST['fk_category'] ?? null;
         $coordsJson  = $_POST['coordinates'] ?? '[]';
+        $createdAt   = $_POST['created_at']  ?? null;
 
         // 3. Validation des champs obligatoires
         if (!$title || !$type || !$fkCategory) {
@@ -63,13 +64,21 @@ class ObservationController {
             return;
         }
 
+        // Convertit le format HTML (2024-01-15T10:30) au format MySQL (2024-01-15 10:30:00)
+        if ($createdAt) {
+            $createdAt = str_replace('T', ' ', $createdAt);
+            if (strlen($createdAt) === 16) {
+                $createdAt .= ':00'; // ajoute les secondes si absentes
+            }
+        }
+
         $pdo = Database::getInstance()->getConnection();
 
         try {
             $pdo->beginTransaction();
 
-            // 4. Insertion de l'observation principale
-            $observation = new Observation($title, $type, (int)$fkCategory, $description);
+            // 4. Insertion de l'observation principale (avec date si fournie)
+            $observation = new Observation($title, $type, (int)$fkCategory, $description, $createdAt);
             $observation = $this->observationWorker->create($observation);
 
             // 5. Décodage et insertion des coordonnées géographiques
@@ -207,24 +216,34 @@ class ObservationController {
         }
 
         /**
-         * Met à jour les champs textuels d'une observation existante.
-         * Requiert une session active. Lit les données depuis $_POST.
+         * Met à jour une observation existante : champs textuels, date et nouvelles images.
+         * Requiert une session active. Lit les données depuis $_POST et $_FILES.
          * Répond avec 400 si des champs sont manquants, 404 si l'observation est introuvable.
          *
          * @return void
          */
         public function update(): void {
             $this->requireAuth();
-            $id = $_POST['id'] ?? null;
-            $title = $_POST['title'] ?? null;
+
+            $id          = $_POST['id']          ?? null;
+            $title       = $_POST['title']       ?? null;
             $description = $_POST['description'] ?? null;
-            $type = $_POST['type'] ?? null;
-            $fkCategory = $_POST['fk_category'] ?? null;
+            $type        = $_POST['type']        ?? null;
+            $fkCategory  = $_POST['fk_category'] ?? null;
+            $createdAt   = $_POST['created_at']  ?? null;
 
             if (!$id || !$title || !$type || !$fkCategory) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Il manque des champs obligatoires !']);
                 return;
+            }
+
+            // Convertit le format HTML (2024-01-15T10:30) au format MySQL (2024-01-15 10:30:00)
+            if ($createdAt) {
+                $createdAt = str_replace('T', ' ', $createdAt);
+                if (strlen($createdAt) === 16) {
+                    $createdAt .= ':00';
+                }
             }
 
             $observation = $this->observationWorker->findById((int)$id);
@@ -234,14 +253,87 @@ class ObservationController {
                 return;
             }
 
-            $observation->setTitle($title);
-            $observation->setDescription($description);
-            $observation->setType($type);
-            $observation->setFkCategory((int)$fkCategory);
-            $this->observationWorker->update($observation);
-            http_response_code(200);
-            echo json_encode(['success' => true]);
+            $pdo = Database::getInstance()->getConnection();
 
+            try {
+                $pdo->beginTransaction();
+
+                // Met à jour les champs de l'observation
+                $observation->setTitle($title);
+                $observation->setDescription($description);
+                $observation->setType($type);
+                $observation->setFkCategory((int)$fkCategory);
+                if ($createdAt) {
+                    $observation->setCreatedAt($createdAt);
+                }
+                $this->observationWorker->update($observation);
+
+                // Upload des nouvelles images si présentes
+                if (!empty($_FILES['images']['name'][0])) {
+                    for ($i = 0; $i < count($_FILES['images']['name']); $i++) {
+                        if ($_FILES['images']['error'][$i] !== 0) continue; // ignore les fichiers en erreur
+                        $extension = pathinfo($_FILES['images']['name'][$i], PATHINFO_EXTENSION);
+                        // Utilise un timestamp pour éviter les collisions de noms de fichiers
+                        $fileName  = $observation->getPkObservation() . '_' . time() . '_' . $i . '.' . $extension;
+                        $filePath  = '../uploads/' . $fileName;
+                        move_uploaded_file($_FILES['images']['tmp_name'][$i], UPLOAD_PATH . $fileName);
+                        $this->imageWorker->create(new Image($observation->getPkObservation(), $filePath));
+                    }
+                }
+
+                $pdo->commit();
+                http_response_code(200);
+                echo json_encode(['success' => true]);
+
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                http_response_code(500);
+                echo json_encode(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()]);
+            }
+        }
+
+        /**
+         * Supprime une image : efface le fichier physique puis supprime l'entrée en base.
+         * Requiert une session active. Lit pk_image depuis $_POST.
+         * Répond avec 400 si l'id est absent, 404 si l'image est introuvable, 200 en cas de succès.
+         *
+         * @return void
+         */
+        public function deleteImage(): void {
+            $this->requireAuth();
+
+            $pkImage = $_POST['pk_image'] ?? null;
+            if (!$pkImage) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Il manque l\'identifiant de l\'image !']);
+                return;
+            }
+
+            try {
+                // Récupère l'image pour connaître son chemin de fichier
+                $image = $this->imageWorker->findById((int)$pkImage);
+                if (!$image) {
+                    http_response_code(404);
+                    echo json_encode(['error' => 'Image introuvable']);
+                    return;
+                }
+
+                // Supprime le fichier physique sur le disque
+                $physicalPath = UPLOAD_PATH . basename($image->getFilePath());
+                if (file_exists($physicalPath)) {
+                    unlink($physicalPath); // efface le fichier du dossier uploads/
+                }
+
+                // Supprime l'entrée en base de données
+                $this->imageWorker->delete((int)$pkImage);
+
+                http_response_code(200);
+                echo json_encode(['success' => true]);
+
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Erreur lors de la suppression de l\'image : ' . $e->getMessage()]);
+            }
         }
 
 }

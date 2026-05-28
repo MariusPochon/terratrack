@@ -43,6 +43,28 @@ class ImageWorker {
     // -------------------------------------------------------------------------
 
     /**
+     * Retourne une image par son identifiant, ou null si elle n'existe pas.
+     * Utilisée avant suppression pour récupérer le chemin du fichier physique.
+     *
+     * @param  int $pkImage Clé primaire de l'image
+     * @return Image|null
+     * @throws Exception En cas d'erreur PDO
+     */
+    public function findById(int $pkImage): ?Image {
+        try {
+            $stmt = $this->pdo->prepare(
+                'SELECT * FROM t_image WHERE pk_image = :pk_image'
+            );
+            $stmt->execute([':pk_image' => $pkImage]);
+
+            $row = $stmt->fetch();
+            return $row ? $this->hydrate($row) : null;
+        } catch (PDOException $e) {
+            throw new Exception("Erreur lors de la récupération de l'image (id=$pkImage) : " . $e->getMessage());
+        }
+    }
+
+    /**
      * Retourne toutes les images associées à une observation.
      *
      * @param  int $fkObservation Identifiant de l'observation parente

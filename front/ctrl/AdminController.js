@@ -167,6 +167,7 @@ class AdminController extends UserController {
 
     /**
      * Affiche les images existantes d'une observation dans la section dédiée de la modale.
+     * Chaque image est accompagnée d'un bouton ✕ pour la supprimer.
      * La section est masquée si aucune image n'est associée.
      *
      * @param {Array} images Tableau d'objets image (file_path, pk_image)
@@ -184,13 +185,52 @@ class AdminController extends UserController {
 
         section.style.display = 'block';
         images.forEach(img => {
+            // Conteneur relatif pour positionner le bouton de suppression par-dessus la miniature
+            const wrapper = document.createElement('div');
+            wrapper.className = 'modal-image-wrapper';
+
             const thumb = document.createElement('img');
             thumb.src       = `../../back/${this.escapeHtml(img.file_path)}`;
             thumb.alt       = '';
             thumb.className = 'modal-image-thumb';
             thumb.title     = img.file_path.split('/').pop(); // affiche le nom du fichier au survol
-            list.appendChild(thumb);
+
+            // Bouton de suppression positionné en haut à droite de la miniature
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type      = 'button';
+            deleteBtn.className = 'modal-image-delete-btn';
+            deleteBtn.textContent = '✕';
+            deleteBtn.title     = 'Supprimer cette image';
+            deleteBtn.addEventListener('click', () => this.deleteImage(img.pk_image, wrapper));
+
+            wrapper.appendChild(thumb);
+            wrapper.appendChild(deleteBtn);
+            list.appendChild(wrapper);
         });
+    }
+
+    /**
+     * Supprime une image : envoie la requête au serveur puis retire la miniature de la modale.
+     * Masque la section si plus aucune image n'est présente.
+     *
+     * @param {number} pkImage  Identifiant de l'image à supprimer
+     * @param {HTMLElement} wrapper Élément DOM à retirer de la liste en cas de succès
+     * @returns {Promise<void>}
+     */
+    async deleteImage(pkImage, wrapper) {
+        if (!confirm('Supprimer cette image ?')) return;
+        try {
+            await this.observationWorker.deleteImage(pkImage);
+            wrapper.remove(); // retire la miniature de l'interface
+
+            // Si la liste est vide, masque la section entière
+            const list = document.getElementById('modal-images-list');
+            if (list.children.length === 0) {
+                document.getElementById('modal-images-current-section').style.display = 'none';
+            }
+        } catch (err) {
+            alert('Erreur lors de la suppression : ' + err.message);
+        }
     }
 
     /**
@@ -343,13 +383,14 @@ class AdminController extends UserController {
      * @returns {Promise<void>}
      */
     async submitModal() {
-        const title      = document.getElementById('modal-title-input').value.trim();
+        const title       = document.getElementById('modal-title-input').value.trim();
         const description = document.getElementById('modal-description-input').value.trim();
-        const fkCategory = document.getElementById('modal-category-select').value;
-        const type       = document.getElementById('modal-type').value;
-        const coordsJson = document.getElementById('modal-coords').value;
+        const fkCategory  = document.getElementById('modal-category-select').value;
+        const type        = document.getElementById('modal-type').value;
+        const coordsJson  = document.getElementById('modal-coords').value;
+        const createdAt   = document.getElementById('modal-date-input').value;
         const imagesInput = document.getElementById('modal-images-input');
-        const statusEl   = document.getElementById('modal-status');
+        const statusEl    = document.getElementById('modal-status');
 
         if (!title)      { statusEl.textContent = "Le titre est obligatoire.";   return; }
         if (!fkCategory) { statusEl.textContent = "Sélectionnez une catégorie."; return; }
@@ -363,6 +404,7 @@ class AdminController extends UserController {
         fd.append('isArea',      type === 'zone' ? '1' : '0');
         fd.append('fk_category', fkCategory);
         fd.append('coordinates', JSON.stringify(coords));
+        if (createdAt) fd.append('created_at', createdAt); // envoie la date si remplie
         if (imagesInput && imagesInput.files.length) {
             for (const file of imagesInput.files) fd.append('images[]', file);
         }

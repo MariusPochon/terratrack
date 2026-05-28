@@ -120,6 +120,7 @@ class ObservationWorker {
 
     /**
      * Insère une nouvelle observation en base et met à jour sa clé primaire.
+     * Si une date de création est fournie, elle est insérée à la place de la valeur par défaut.
      *
      * @param  Observation $observation Objet Observation à insérer
      * @return Observation              L'objet Observation avec sa clé primaire renseignée
@@ -127,16 +128,32 @@ class ObservationWorker {
      */
     public function create(Observation $observation): Observation {
         try {
-            $stmt = $this->pdo->prepare(
-                'INSERT INTO t_observation (title, description, type, fk_category)
-                 VALUES (:title, :description, :type, :fk_category)'
-            );
-            $stmt->execute([
-                ':title'       => $observation->getTitle(),
-                ':description' => $observation->getDescription(),
-                ':type'        => $observation->getType(),
-                ':fk_category' => $observation->getFkCategory(),
-            ]);
+            // Si une date personnalisée est fournie, on l'inclut dans l'INSERT
+            if ($observation->getCreatedAt()) {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO t_observation (title, description, type, fk_category, created_at)
+                     VALUES (:title, :description, :type, :fk_category, :created_at)'
+                );
+                $stmt->execute([
+                    ':title'       => $observation->getTitle(),
+                    ':description' => $observation->getDescription(),
+                    ':type'        => $observation->getType(),
+                    ':fk_category' => $observation->getFkCategory(),
+                    ':created_at'  => $observation->getCreatedAt(),
+                ]);
+            } else {
+                // Sans date personnalisée, MySQL utilise la valeur par défaut (NOW())
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO t_observation (title, description, type, fk_category)
+                     VALUES (:title, :description, :type, :fk_category)'
+                );
+                $stmt->execute([
+                    ':title'       => $observation->getTitle(),
+                    ':description' => $observation->getDescription(),
+                    ':type'        => $observation->getType(),
+                    ':fk_category' => $observation->getFkCategory(),
+                ]);
+            }
 
             $observation->setPkObservation((int) $this->pdo->lastInsertId());
             return $observation;
@@ -146,7 +163,7 @@ class ObservationWorker {
     }
 
     /**
-     * Met à jour les champs d'une observation existante.
+     * Met à jour les champs d'une observation existante, y compris la date de création.
      * Retourne true si une ligne a bien été modifiée, false sinon.
      *
      * @param  Observation $observation Objet Observation avec les nouvelles valeurs
@@ -160,15 +177,17 @@ class ObservationWorker {
                  SET title        = :title,
                      description  = :description,
                      type         = :type,
-                     fk_category  = :fk_category
+                     fk_category  = :fk_category,
+                     created_at   = :created_at
                  WHERE pk_observation = :pk_observation'
             );
             $stmt->execute([
-                ':title'        => $observation->getTitle(),
-                ':description'  => $observation->getDescription(),
-                ':type'         => $observation->getType(),
-                ':fk_category'  => $observation->getFkCategory(),
-                ':pk_observation' => $observation->getPkObservation(),
+                ':title'           => $observation->getTitle(),
+                ':description'     => $observation->getDescription(),
+                ':type'            => $observation->getType(),
+                ':fk_category'     => $observation->getFkCategory(),
+                ':created_at'      => $observation->getCreatedAt(),
+                ':pk_observation'  => $observation->getPkObservation(),
             ]);
 
             return $stmt->rowCount() > 0;

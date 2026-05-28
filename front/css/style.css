@@ -348,6 +348,37 @@ input[type="file"] {
     margin-top: 0.35rem;
 }
 
+/* Conteneur d'une image existante (position relative pour le bouton de suppression) */
+.modal-image-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+/* Bouton ✕ de suppression positionné en haut à droite de la miniature */
+.modal-image-delete-btn {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    line-height: 18px;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-image-delete-btn:hover {
+    background: #c0392b;
+}
+
 /* Miniature d'une image existante */
 .modal-image-thumb {
     width: 75px;
