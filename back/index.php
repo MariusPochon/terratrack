@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Point d'entrée unique de l'API backend (Front Controller).
+ * Point d'entrée unique de l'API backend.
  * Reçoit toutes les requêtes HTTP, configure les en-têtes CORS,
  * puis délègue le traitement au contrôleur correspondant selon le paramètre "action".
  */

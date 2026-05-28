@@ -65,8 +65,16 @@
                 <option value="">-- choisir --</option>
             </select>
 
-            <label for="modal-images-input">Images (optionnel)</label>
+            <!-- Images existantes — visible uniquement en mode édition -->
+            <div id="modal-images-current-section">
+                <label>Images actuelles</label>
+                <div id="modal-images-list"></div>
+            </div>
+
+            <label id="modal-images-label" for="modal-images-input">Images (optionnel)</label>
             <input type="file" id="modal-images-input" name="images[]" accept="image/*" multiple>
+            <!-- Aperçu des nouvelles images sélectionnées avant envoi -->
+            <div id="modal-images-new-preview"></div>
 
             <div id="modal-status"></div>
 

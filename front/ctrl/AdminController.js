@@ -127,6 +127,11 @@ class AdminController extends UserController {
             this.extractCoords(layer, type)
         );
 
+        // Mode création : masquer la section images existantes et réinitialiser les aperçus
+        document.getElementById('modal-images-current-section').style.display = 'none';
+        document.getElementById('modal-images-label').textContent = 'Images (optionnel)';
+        document.getElementById('modal-images-new-preview').innerHTML = '';
+
         document.getElementById('modal-overlay').classList.add('actif');
     }
 
@@ -152,7 +157,40 @@ class AdminController extends UserController {
             this.extractCoords(layer, obs.type)
         );
 
+        // Mode édition : afficher les images existantes
+        this.renderExistingImages(obs.images || []);
+        document.getElementById('modal-images-label').textContent = 'Ajouter de nouvelles images';
+        document.getElementById('modal-images-new-preview').innerHTML = '';
+
         document.getElementById('modal-overlay').classList.add('actif');
+    }
+
+    /**
+     * Affiche les images existantes d'une observation dans la section dédiée de la modale.
+     * La section est masquée si aucune image n'est associée.
+     *
+     * @param {Array} images Tableau d'objets image (file_path, pk_image)
+     * @returns {void}
+     */
+    renderExistingImages(images) {
+        const section = document.getElementById('modal-images-current-section');
+        const list    = document.getElementById('modal-images-list');
+        list.innerHTML = '';
+
+        if (images.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        images.forEach(img => {
+            const thumb = document.createElement('img');
+            thumb.src       = `../../back/${this.escapeHtml(img.file_path)}`;
+            thumb.alt       = '';
+            thumb.className = 'modal-image-thumb';
+            thumb.title     = img.file_path.split('/').pop(); // affiche le nom du fichier au survol
+            list.appendChild(thumb);
+        });
     }
 
     /**
@@ -223,6 +261,25 @@ class AdminController extends UserController {
 
         document.getElementById('form-releve')
             .addEventListener('submit', (e) => { e.preventDefault(); this.submitModal(); });
+
+        // Aperçu des nouvelles images sélectionnées avant upload (création uniquement)
+        document.getElementById('modal-images-input')
+            .addEventListener('change', (e) => {
+                const preview = document.getElementById('modal-images-new-preview');
+                preview.innerHTML = '';
+                for (const file of e.target.files) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const img   = document.createElement('img');
+                        img.src     = ev.target.result;
+                        img.alt     = file.name;
+                        img.title   = file.name;
+                        img.className = 'modal-image-new-thumb';
+                        preview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file); // lit le fichier localement pour l'aperçu
+                }
+            });
     }
 
     // -------------------------------------------------------------------------

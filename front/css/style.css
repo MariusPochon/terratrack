@@ -330,6 +330,43 @@ input[type="file"] {
     margin-top: 0.4rem;
 }
 
+/* ============================================================
+   Images dans la modale
+   ============================================================ */
+
+/* Section images existantes : masquée par défaut, affichée en mode édition */
+#modal-images-current-section {
+    display: none;
+}
+
+/* Grilles d'aperçu (images existantes et nouvelles) */
+#modal-images-list,
+#modal-images-new-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+}
+
+/* Miniature d'une image existante */
+.modal-image-thumb {
+    width: 75px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 1px solid #ddd;
+    cursor: zoom-in;
+}
+
+/* Miniature d'une nouvelle image (avant upload) */
+.modal-image-new-thumb {
+    width: 75px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 2px dashed #3498db; /* bordure pointillée bleue = en attente d'upload */
+}
+
 #modal-status {
     font-size: 0.8rem;
     color: #555;
